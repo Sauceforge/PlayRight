@@ -26,7 +26,6 @@ jobs:
           sudo apt-get install -y \
             libgtk-3-0 \
             libxss1 \
-            libasound2 \
             libnss3 \
             libatk-bridge2.0-0 \
             libatk1.0-0 \
@@ -44,17 +43,15 @@ jobs:
             libegl1 \
             libopus0 \
             libwoff1 \
-            libwebp6 \
+            libwebp-dev \
             libwebpmux3 \
             libenchant-2-2 \
             libharfbuzz-icu0 \
-            libvpx7 \
             libevent-2.1-7 \
             libsecret-1-0 \
             libhyphen0 \
             libmanette-0.2-0 \
-            libgles2 \
-            libavif13
+            libgles2
 
       - name: Install dependencies
         run: npm ci
