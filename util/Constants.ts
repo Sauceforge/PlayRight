@@ -8,15 +8,15 @@ export class Constants {
 
   static LocatorIds = class {
     public static readonly IAmAnId = "#i_am_an_id";
-    public static readonly Appear3Times = 'text=/^i appear 3 times$/i';
-    public static readonly Body = 'body';
+    public static readonly Appear3Times = "text=/^i appear 3 times$/i";
+    public static readonly Body = "body";
   };
 
   static Texts = class {
     public static readonly IAmSomePageContent = "I am some page content";
-    public static readonly IAmInvisible = 'i am invisible';
-    public static readonly YourComments = 'Your comments:';
-    public static readonly ClientTime = 'Client time:';
+    public static readonly IAmInvisible = "i am invisible";
+    public static readonly YourComments = "Your comments:";
+    public static readonly ClientTime = "Client time:";
   };
 
   static Labels = class {

@@ -9,39 +9,42 @@ import { FlatCompat } from "@eslint/eslintrc";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const compat = new FlatCompat({
-    baseDirectory: __dirname,
-    recommendedConfig: js.configs.recommended,
-    allConfig: js.configs.all
+  baseDirectory: __dirname,
+  recommendedConfig: js.configs.recommended,
+  allConfig: js.configs.all,
 });
 
-export default defineConfig([globalIgnores(["**/node_modules/"]), {
+export default defineConfig([
+  globalIgnores(["**/node_modules/"]),
+  {
     extends: compat.extends(
-        "eslint:recommended",
-        "plugin:@typescript-eslint/recommended",
-        "plugin:@typescript-eslint/eslint-recommended",
-        "plugin:playwright/recommended",
-        "plugin:prettier/recommended",
+      "eslint:recommended",
+      "plugin:@typescript-eslint/recommended",
+      "plugin:@typescript-eslint/eslint-recommended",
+      "plugin:playwright/recommended",
+      "plugin:prettier/recommended",
     ),
 
     plugins: {
-        "@typescript-eslint": typescriptEslint,
+      "@typescript-eslint": typescriptEslint,
     },
 
     languageOptions: {
-        parser: tsParser,
-        ecmaVersion: 5,
-        sourceType: "script",
+      parser: tsParser,
+      ecmaVersion: 5,
+      sourceType: "script",
 
-        parserOptions: {
-            project: ["./tsconfig.json"],
-        },
+      parserOptions: {
+        project: ["./tsconfig.json"],
+      },
     },
 
     rules: {
-        "@typescript-eslint/no-floating-promises": "error",
-        "@typescript-eslint/no-var-requires": "off",
-        "arrow-body-style": "off",
-        "prefer-arrow-callback": "off",
-        "playwright/prefer-web-first-assertions": "off",
+      "@typescript-eslint/no-floating-promises": "error",
+      "@typescript-eslint/no-var-requires": "off",
+      "arrow-body-style": "off",
+      "prefer-arrow-callback": "off",
+      "playwright/prefer-web-first-assertions": "off",
     },
-}]);
+  },
+]);
