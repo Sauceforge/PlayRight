@@ -21,47 +21,7 @@ jobs:
           node-version: '20'
 
       - name: Install Playwright dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            libgtk-3-0 \
-            libxss1 \
-            libnss3 \
-            libatk-bridge2.0-0 \
-            libatk1.0-0 \
-            libcups2 \
-            libdrm2 \
-            libxcomposite1 \
-            libxdamage1 \
-            libxrandr2 \
-            libgbm1 \
-            libpango-1.0-0 \
-            libpangocairo-1.0-0 \
-            libatspi2.0-0 \
-            libcurl4 \
-            libgdk-pixbuf2.0-0 \
-            libegl1 \
-            libopus0 \
-            libwoff1 \
-            libwebp-dev \
-            libwebpmux3 \
-            libenchant-2-2 \
-            libharfbuzz-icu0 \
-            libevent-2.1-7 \
-            libsecret-1-0 \
-            libhyphen0 \
-            libmanette-0.2-0 \
-            libgles2
-
-      - name: Install extra Playwright dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            libgtk-4-1 \
-            libgraphene-1.0-0 \
-            libvpx9 \
-            libflite1 \
-            libavif16
+        run: sudo npx playwright install-deps
 
       - name: Install dependencies
         run: npm ci
