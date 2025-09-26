@@ -1,0 +1,61 @@
+trigger:
+  branches:
+    include:
+    - master
+
+schedules:
+- cron: '0 13 * * Mon,Tue,Wed,Thu,Fri'
+  displayName: Daily midnight build
+  branches:
+    include:
+    - master
+  always: true
+
+stages:
+  - stage: run_tests
+    jobs:
+      - job: 'Test_Guinea_Pig'
+        displayName: 'Test Guinea Pig'
+        variables:
+          - group: test-automation
+        pool:
+          name: Company-Private-Hosted-Linux-NonProd-Scalable
+        container: cached-images.azr.company.com.au/dple-linux-testautomation-node-pipeline:latest
+
+        strategy:
+          matrix:
+            chromium-1:
+              project: guinea-pig
+              shard: 1/3
+            chromium-2:
+              project: guinea-pig
+              shard: 2/3
+            chromium-3:
+              project: guinea-pig
+              shard: 3/3
+
+        steps:
+        - script: npm ci
+          displayName: 'Install CI'
+        - script: npm run lint
+          displayName: 'Run ESLint'
+        - script: npm run format
+          displayName: 'Run Prettier'
+        - script: npx playwright install chromium
+          displayName: 'Install Chromium'
+        - script: npx playwright test --project=$(project) --shard=$(shard)
+          displayName: 'Run Guinea Pig Playwright Tests'
+          timeoutInMinutes: 180
+          env:
+            CI: 'true'
+            HUSKY: 0
+        - task: PublishTestResults@2
+          displayName: 'Publish Guinea Pig Test Results'
+          inputs:
+            searchFolder: 'test-results'
+            testResultsFormat: 'JUnit'
+            testResultsFiles: 'e2e-junit-results.xml'
+            mergeTestResults: true
+            failTaskOnFailedTests: true
+            testRunTitle: 'End-To-End Rush Tests'
+          condition: succeededOrFailed()
