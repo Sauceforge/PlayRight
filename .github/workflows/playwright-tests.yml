@@ -52,6 +52,16 @@ jobs:
             libhyphen0 \
             libmanette-0.2-0 \
             libgles2
+      - name: Install extra Playwright dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libgtk-4-1 \
+            libgraphene-1.0-0 \
+            libvpx9 \
+            libflite1 \
+            libavif16 \
+            libx264-160
 
       - name: Install dependencies
         run: npm ci
