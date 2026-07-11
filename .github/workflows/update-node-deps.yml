@@ -2,6 +2,8 @@ name: Update Node dependencies (daily)
 
 on:
   schedule:
+    # Runs daily at 02:00 UTC, which is 12:00 or 13:00 Melbourne time
+    # depending on daylight-saving time.
     - cron: "0 2 * * *"
   workflow_dispatch:
 
@@ -17,55 +19,66 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Checkout main
+        uses: actions/checkout@v5
         with:
-          persist-credentials: true
+          ref: main
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
-      - name: Install Playwright system dependencies
-        run: sudo npx playwright install-deps
-
-      - name: Update dependencies
+      - name: Update dependency versions
         run: |
+          set -euo pipefail
+
+          # Update dependency ranges in package.json, including new major versions.
+          npx --yes npm-check-updates@latest --upgrade
+
+          # Regenerate package-lock.json and install the updated dependencies.
           npm install
 
-      - name: Install Playwright browsers
-        run: npx playwright install
+      - name: Install Playwright browsers and system dependencies
+        run: npx playwright install --with-deps
 
       - name: Run tests
         run: npx playwright test
 
-      - name: Commit and push if there are changes
+      - name: Commit and push dependency updates
         shell: bash
         env:
           GH_PAT: ${{ secrets.ACTIONS_PUSH_PAT }}
         run: |
           set -euo pipefail
+
           git config user.name "agray"
           git config user.email "agray@users.noreply.github.com"
-          export GIT_AUTHOR_NAME="agray"
-          export GIT_AUTHOR_EMAIL="agray@users.noreply.github.com"
-          export GIT_COMMITTER_NAME="agray"
-          export GIT_COMMITTER_EMAIL="agray@users.noreply.github.com"
 
-          git add -A
+          git add -- package.json package-lock.json
 
           if git diff --cached --quiet; then
-            echo "✅ No changes detected after running sync-package-versions.ps1"
+            echo "No Node dependency updates were found."
             exit 0
           fi
 
-          git commit -m "Automated version sync"
-          git pull --rebase origin main
+          echo "Dependency changes:"
+          git diff --cached --stat
+          git diff --cached -- package.json
 
-          echo "🔐 Using PAT to push changes..."
-          git push "https://x-access-token:${GH_PAT}@github.com/${{ github.repository }}" HEAD:main
+          git commit -m "Update Node dependencies"
 
-          echo "🚀 Changes committed and pushed to main via PAT."
+          # Incorporate any commit pushed to main while this workflow was running.
+          git pull \
+            --rebase \
+            "https://x-access-token:${GH_PAT}@github.com/${{ github.repository }}.git" \
+            main
+
+          git push \
+            "https://x-access-token:${GH_PAT}@github.com/${{ github.repository }}.git" \
+            HEAD:main
+
+          echo "Node dependency updates were committed and pushed to main."
