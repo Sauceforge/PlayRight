@@ -22,7 +22,7 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
-          persist-credentials: false
+          persist-credentials: true
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -35,25 +35,55 @@ jobs:
         run: |
           set -euo pipefail
 
-          # Update package.json to the latest compatible minor or patch
-          # release without automatically crossing major-version boundaries.
           npx --yes npm-check-updates@latest \
             --upgrade \
             --target minor
 
-          # Update package-lock.json and install the resulting dependency tree.
           npm install
 
       - name: Install Playwright browsers and system dependencies
         run: npx playwright install --with-deps
+
+      - name: Run lint
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if npm pkg get scripts.lint | grep -vq '^{}$'; then
+            npm run lint
+          else
+            echo "No lint script is defined; skipping lint."
+          fi
+
+      - name: Run TypeScript type checking
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if npm pkg get scripts.typecheck | grep -vq '^{}$'; then
+            npm run typecheck
+          elif [ -f "tsconfig.json" ]; then
+            npx tsc --noEmit
+          else
+            echo "No typecheck script or tsconfig.json was found; skipping."
+          fi
+
+      - name: Run build
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if npm pkg get scripts.build | grep -vq '^{}$'; then
+            npm run build
+          else
+            echo "No build script is defined; skipping build."
+          fi
 
       - name: Run Playwright tests
         run: npx playwright test
 
       - name: Commit and push dependency updates
         shell: bash
-        env:
-          GH_PAT: ${{ secrets.ACTIONS_PUSH_PAT }}
         run: |
           set -euo pipefail
 
@@ -73,14 +103,9 @@ jobs:
 
           git commit -m "Update Node dependencies"
 
-          # Rebase onto the latest main in case it changed while the tests ran.
-          git pull \
-            --rebase \
-            "https://x-access-token:${GH_PAT}@github.com/${{ github.repository }}.git" \
-            main
-
-          git push \
-            "https://x-access-token:${GH_PAT}@github.com/${{ github.repository }}.git" \
-            HEAD:main
+          # The checkout action has already configured authenticated Git access
+          # using this workflow's GITHUB_TOKEN.
+          git pull --rebase origin main
+          git push origin HEAD:main
 
           echo "Node dependency updates were committed and pushed to main."
