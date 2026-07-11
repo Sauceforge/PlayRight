@@ -2,8 +2,6 @@ name: Update Node dependencies (daily)
 
 on:
   schedule:
-    # Runs daily at 02:00 UTC, which is 12:00 or 13:00 Melbourne time
-    # depending on daylight-saving time.
     - cron: "0 2 * * *"
   workflow_dispatch:
 
@@ -20,32 +18,36 @@ jobs:
 
     steps:
       - name: Checkout main
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
         with:
           ref: main
           fetch-depth: 0
           persist-credentials: false
 
       - name: Set up Node.js
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: "npm"
 
-      - name: Update dependency versions
+      - name: Update dependencies within current major versions
+        shell: bash
         run: |
           set -euo pipefail
 
-          # Update dependency ranges in package.json, including new major versions.
-          npx --yes npm-check-updates@latest --upgrade
+          # Update package.json to the latest compatible minor or patch
+          # release without automatically crossing major-version boundaries.
+          npx --yes npm-check-updates@latest \
+            --upgrade \
+            --target minor
 
-          # Regenerate package-lock.json and install the updated dependencies.
+          # Update package-lock.json and install the resulting dependency tree.
           npm install
 
       - name: Install Playwright browsers and system dependencies
         run: npx playwright install --with-deps
 
-      - name: Run tests
+      - name: Run Playwright tests
         run: npx playwright test
 
       - name: Commit and push dependency updates
@@ -71,7 +73,7 @@ jobs:
 
           git commit -m "Update Node dependencies"
 
-          # Incorporate any commit pushed to main while this workflow was running.
+          # Rebase onto the latest main in case it changed while the tests ran.
           git pull \
             --rebase \
             "https://x-access-token:${GH_PAT}@github.com/${{ github.repository }}.git" \
